@@ -1,0 +1,17 @@
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: fortune-pod
+  labels:
+    name: fortune-pod
+
+spec:
+  containers:
+  - name: fortune-container
+    image: alhammialiffartc/my_fortune:v2
+    imagePullPolicy: IfNotPresent
+    ports:
+    - containerPort: 3000
+
+

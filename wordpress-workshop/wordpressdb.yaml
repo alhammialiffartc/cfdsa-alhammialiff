@@ -1,0 +1,54 @@
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: wordpressdb-pvc
+  labels:
+    app: wordpress
+    name: wordpressdb-pvc
+  
+spec:
+  storageClassName: do-block-storage
+  accessModes:
+  - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: wordpressdb-deploy
+  labels:
+    app: wordpress
+    name: wordpressdb-deploy
+spec:
+  replicas: 1
+  selector:
+    matchLabel:
+      name: wordpress-pod
+  template:
+    metadata:
+      name: wordpress-pod
+      labels:
+        app: wordpress
+        name: wordpress-pod
+    spec:
+      volumes:
+      - name: wordpressdb-vol
+        persistentVolumeClaim:
+          claimName: wordpressdb-pvc
+    
+    containers:
+    - name: wordpressdb-container
+      #image: Do I need to create my own db?
+      imagePullPolicy: IfNotPresent
+      ports:
+      - name: wordpressdb-container
+        #containerPort: ...
+      volumeMounts:
+      - name: wordpressdb-vol
+        mountPath: /var/lib/mysql
+
+

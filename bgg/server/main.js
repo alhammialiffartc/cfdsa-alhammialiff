@@ -21,7 +21,7 @@ const config = {
 	host: cliValues['db_host'] || process.env.BGG_DB_HOST || '127.0.0.1',
 	port: parseInt(cliValues['db_port'] || process.env.BGG_DB_PORT || 3306),
 	user: cliValues['db_user'] || process.env.BGG_DB_USER || 'root',
-	password: cliValues['db_password'] || process.env.BGG_DB_PASSWORD || 'changeit',
+	password: cliValues['db_password'] || process.env.BGG_DB_PASSWORD || 'mypassword',
 	database: process.env.BGG_DB || 'bgg',
 	connectionLimit: process.env.BGG_DB_CONNECTION_LIMIT || 2
 }

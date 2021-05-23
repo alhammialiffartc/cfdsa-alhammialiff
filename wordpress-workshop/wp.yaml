@@ -1,0 +1,120 @@
+---
+# Defining PVC here.
+# Persisent vol storage is independent of pods
+# To request for vol storage, PVC needs to be defined 
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: wp-pvc
+  labels:
+    name: wp-pvc
+
+# What is the specs of this PVC?
+spec:
+  storageClassName: do-block-storage
+  accessModes:
+  - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: wp-deploy
+  labels:
+    name: wp-deploy
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      name: wp-pod
+  template:
+    metadata:
+      name: wp-pod
+      labels:
+        name: wp-pod
+    spec:
+      volumes:
+      - name: wp-vol
+        persistentVolumeClaim:
+          claimName: wp-pvc
+      containers:
+      - name: wp-container
+        image: wordpress:5
+        imagePullPolicy: IfNotPresent
+        envFrom:
+        - secretRef:
+            name: wp-secret
+        - configMapRef:
+            name: wp-cm
+        ports:
+        - name: wp-port
+          containerPort: 80
+        volumeMounts:
+        - name: wp-vol
+          mountPath: /var/www/html
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: wp-svc
+  labels:
+    name: wp-svc
+spec:
+  type: ClusterIP
+  selector:
+    name: wp-pod
+  ports:
+  - port: 80
+    targetPort: wp-port
+
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: wp-ing
+  labels:
+    name: wp-ing
+spec:
+  ingressClassName: nginx
+  rules:
+  - host: wp-144.126.204.100.nip.io
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: wp-svc
+            port:
+              number: 80
+
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: wpdb-netpol
+  labels:
+    name: wpdb-netpol
+
+spec:
+  podSelector:
+    matchLabels:
+      name: wp-pod
+  policyTypes:
+  - Ingress
+  ingress:
+  - from:
+    - podSelector:
+        matchLabels:
+          app.kubernetes.io/instance: my-ingress
+      namespaceSelector:
+        matchLabels:
+          name: ingress
+    ports:
+    - port: wp-port
+      protocol: TCP
+
